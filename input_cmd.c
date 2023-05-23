@@ -3,14 +3,16 @@
 #include <string.h>
 
 /**
+ * execute_command - Use system() to execute the command
  * Executes a command.
  *
  * @param command The command to execute.
  */
 
-void execute_command(const char* command)
+void execute_command(const char *command)
 {
 	int result = system(command);
+
 	if (result == -1)
 	{
 		perror("Failed to execute the command");
@@ -20,23 +22,26 @@ void execute_command(const char* command)
 /**
  * Main function of the simple shell.
  *
- * Takes a file as a command line argument and executes the commands in the file.
+ * Takes a file as a command line argument and executes it.
  * Each command should be on a separate line in the file.
  * The shell does not print a prompt or read from stdin in this mode.
  *
- * @param argc The number of command line arguments.
- * @param argv The array of command line arguments.
- * @return 0 on success, non-zero on failure.
+ * @param argc: The number of command line arguments.
+ * @param argv: The array of command line arguments.
+ * @return: 0 on success, non-zero on failure.
  */
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	char line[100];
+
 	if (argc > 1)
 	{
-		FILE* file = fopen(argv[1], "r");
-		if (file == NULL) {
+		FILE *file = fopen(argv[1], "r");
+
+		if (file == NULL)
+		{
 			fprintf(stderr, "Failed to open the file: %s\n", argv[1]);
-			return 1;
+			return (1);
 		}
 
 		while (fgets(line, sizeof(line), file))
@@ -49,5 +54,5 @@ int main(int argc, char* argv[])
 		fclose(file);
 	}
 
-	return 0;
+	return (0);
 }

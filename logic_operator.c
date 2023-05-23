@@ -7,7 +7,7 @@
  *
  * @param command The command to execute.
  */
-void execute_command(const char* command)
+void execute_command(const char *command)
 {
 	printf("Executing command: %s\n", command);
 	system(command);
@@ -17,12 +17,12 @@ void execute_command(const char* command)
  * The main function of the program.
  *
  * Reads multiple commands from the user, separated by ';',
- * and executes each command based on the previous command's result and the logical operators.
+ * and executes each command based on the previous command's result.
  */
-int main()
+int main(void)
 {
 	char input[100];
-	char* token;
+	char *token;
 	int status = 1;
 
 	printf("Enter commands separated by ';':\n");

@@ -13,8 +13,24 @@
 #include <limits.h>
 
 #define BUFSIZE 1024
+typedef struct data
+{
+	char **av;
+	char *input;
+	char **args;
+	int status;
+	int counter;
+	char **_env;
+	char *pid;
+} data_shell;
+typedef struct line_list_s
+{
+	char *line;
+	struct line_list_s *next;
+} line_list;
 
 void execute_command(const char* command);
+extern char **environ;
 char *strcat_cd(data_shell *, char *, char *, char *);
 char *error_get(data_shell *datash);
 char *errornot_found(data_shell *datash);
@@ -26,16 +42,6 @@ sep_list *addsep_nodeend(sep_list **head, char sep);
 void freesep_list(sep_list **head);
 line_list *addline_nodeend(line_list **head, char *line);
 void freeline_list(line_list **head);
-typedef struct data
-{
-	char **av;
-	char *input;
-	char **args;
-	int status;
-	int counter;
-	char **_env;
-	char *pid;
-} data_shell;
 void brg_line(char **line_ptr, size_t *n, char *buffer, size_t j);
 ssize_t get_line(char **line_ptr, size_t *n, FILE *stream);
 char *_get_env(const char *name, char **_env);

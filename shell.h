@@ -29,6 +29,40 @@ typedef struct line_list_s
 	struct line_list_s *next;
 } line_list;
 
+<<<<<<< HEAD
+/*alias*/
+void print_alias(Alias alias);
+void print_aliases(void);
+Alias *find_alias(char *name);
+void set_alias(char *name, char *value);
+void handle_alias_command(int argc, char *argv[]);
+
+/*changing directory*/
+int cd_command(const char *directory);
+int main();
+
+/*comments*/
+void remove_comments(char *line);
+int main(void);
+
+/*logical_oparators*/
+void execute_command(const char *command);
+
+/*replacements*/
+void replace_variables(char *line)
+
+/* separators*/
+void execute_command(const char *command);
+
+/* inputs*/
+int main(int argc, char *argv[]);
+void execute_command(const char *command);
+
+/*set-enviroment*/
+void setenv_command(const char *variable, const char *value);
+void unsetenv_command(const char *variable);
+
+=======
 void execute_command(const char* command);
 extern char **environ;
 char *strcat_cd(data_shell *, char *, char *, char *);
@@ -55,4 +89,5 @@ void aux_help_setenv(void);
 void aux_help_unsetenv(void);
 void aux_help_all(void);
 void aux_help_exit(void);
+>>>>>>> 6844c9208d9b7fbab7e7f876b6022ded02fc63fd
 #endif

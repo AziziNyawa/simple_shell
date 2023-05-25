@@ -1,4 +1,4 @@
-include "main.h"
+#include "main.h"
 
 /* File: get_line.c
  * Authors: Azizi Nyawa

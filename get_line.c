@@ -1,84 +1,169 @@
-#include "shell.h"
+include "main.h"
+
+/* File: get_line.c
+ * Authors: Azizi Nyawa
+ * Ronald
+ */
 
 /**
- * brg_line - assigns the line variable
- * @line_ptr: the buffer the stores str
- * @buffer: the buffer of string
- * @n: size of line
- * @z: the size of str
+ * input_buf - buffers chained commanding
+ * @info: parameter structure
+ * @buf: address of buffer
+ * @len: address of length var
+ * Return: read bytes
  */
-void brg_line(char **line_ptr, size_t *n, char *buffer, size_t z)
+ssize_t input_buf(info_t *info, char **buf, size_t *len)
 {
+	ssize_t r = 0;
+	size_t len_p = 0;
 
-	if (*line_ptr == NULL)
+	if (!*len)
 	{
-		if  (z > BUFSIZE)
-			*n = z;
-
-		else
-			*n = BUFSIZE;
-		*line_ptr = buffer;
+		free(*buf);
+		*buf = NULL;
+		signal(SIGINT, sigintHandler);
+#if USE_GETLINE
+		r = getline(buf, &len_p, stdin);
+#else
+		r = _getline(info, buf, &len_p);
+#endif
+		if (r > 0)
+		{
+			if ((*buf)[r - 1] == '\n')
+			{
+				(*buf)[r - 1] = '\0';
+				r--;
+			}
+			info->linecount_flag = 1;
+			remove_comments(*buf);
+			build_history_list(info, *buf, info->histcount++);
+			{
+				*len = r;
+				info->cmd_buf = buf;
+			}
+		}
 	}
-	else if (*n < z)
-	{
-		if (z > BUFSIZE)
-			*n = z;
-		else
-			*n = BUFSIZE;
-		*line_ptr = buffer;
-	}
-	else
-	{
-		_strcpy(*line_ptr, buffer);
-		free(buffer);
-	}
+	return (r);
 }
+
 /**
- * get_line - its reads the input stream
- * @line_ptr: the buffer that its function to store input
- * @n: size of buffer
- * @stream: it reads the input
- * Return: number of byte in it
+ * get_input - gets a line and substruct the newline
+ * @info: parameter structure
+ *
+ * Return: read bytes
  */
-ssize_t get_line(char **line_ptr, size_t *n, FILE *stream)
+ssize_t get_input(info_t *info)
 {
-	int j;
-	static ssize_t input;
-	ssize_t retrival;
-	char *buffer;
-	char y = 'z';
+	static char *buf;
+	static size_t i, j, len;
+	ssize_t r = 0;
+	char **buf_p = &(info->arg), *p;
 
-	if (input == 0)
-		fflush(stream);
-	else
+	_putchar(BUF_FLUSH);
+	r = input_buf(info, &buf, &len);
+	if (r == -1)
 		return (-1);
-	input = 0;
-
-	buffer = malloc(sizeof(char) * BUFSIZE);
-	if (buffer == 0)
-		return (-1);
-	while (y != '\n')
+	if (len)
 	{
-		j = read(STDIN_FILENO, &y, 1);
-		if (j == -1 || (j == 0 && input == 0))
+		j = i;
+		p = buf + i;
+
+		check_chain(info, buf, &j, i, len);
+		while (j < len)
 		{
-			free(buffer);
-			return (-1);
+			if (is_chain(info, buf, &j))
+				break;
+			j++;
 		}
-		if (j == 0 && input != 0)
+
+		i = j + 1;
+		if (i >= len)
 		{
-			input++;
-			break;
+			i = len = 0;
+			info->cmd_buf_type = CMD_NORM;
 		}
-		if (input >= BUFSIZE)
-			buffer = _realloc(buffer, input, input + 1);
-		buffer[input] = y;
-		input++;
+
+		*buf_p = p;
+		return (_strlen(p));
 	}
-	buffer[input] = '\0';
-	brg_line(line_ptr, n, buffer, input);
-	retrival = input;
-	if (j != 0)
-		input = 0;
-	return (retrival);
+
+	*buf_p = buf;
+	return (r);
+}
+
+/**
+ * read_buf - reads a the available buffer
+ * @info: parameter structure
+ * @buf: buffer
+ * @i: size
+ * Return: the r is returned
+ */
+ssize_t read_buf(info_t *info, char *buf, size_t *i)
+{
+	ssize_t r = 0;
+
+	if (*i)
+		return (0);
+	r = read(info->readfd, buf, READ_BUF_SIZE);
+	if (r >= 0)
+		*i = r;
+	return (r);
+}
+
+/**
+ * _getline - gets the next line of input from the main STDIN
+ * @info: parameter structure
+ * @ptr: address of pointer to buffer
+ * @length: size of preallocated ptr buffer
+ * Return: it s is returned
+ */
+int _getline(info_t *info, char **ptr, size_t *length)
+{
+	static char buf[READ_BUF_SIZE];
+	static size_t i, len;
+	size_t k;
+	ssize_t r = 0, s = 0;
+	char *p = NULL, *new_p = NULL, *c;
+
+	p = *ptr;
+	if (p && length)
+		s = *length;
+	if (i == len)
+		i = len = 0;
+
+	r = read_buf(info, buf, &len);
+	if (r == -1 || (r == 0 && len == 0))
+		return (-1);
+
+	c = _strchr(buf + i, '\n');
+	k = c ? 1 + (unsigned int)(c - buf) : len;
+	new_p = _realloc(p, s, s ? s + k : k + 1);
+	if (!new_p)
+		return (p ? free(p), -1 : -1);
+
+	if (s)
+		_strncat(new_p, buf + i, k - i);
+	else
+		_strncpy(new_p, buf + i, k - i + 1);
+
+	s += k - i;
+	i = k;
+	p = new_p;
+
+	if (length)
+		*length = s;
+	*ptr = p;
+	return (s);
+}
+
+/**
+ * sigintHandler - it blocks ctr+c
+ * @sig_num: the signal number
+ * Return: void
+ */
+void sigintHandler(__attribute__((unused))int sig_num)
+{
+	_puts("\n");
+	_puts("$ ");
+	_putchar(BUF_FLUSH);
 }
